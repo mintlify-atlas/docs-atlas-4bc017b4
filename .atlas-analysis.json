@@ -1,0 +1,102 @@
+{
+  "projectType": "saas",
+  "projectName": "WeGotWork",
+  "projectDescription": "All-in-one hiring platform for creating career pages, posting jobs, and managing applicants with built-in ATS",
+  "theme": "almond",
+  "primaryColor": "#000000",
+  "lightColor": "#f5f5f5",
+  "darkColor": "#0a0a0a",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/organizations",
+              "features/career-pages",
+              "features/job-management",
+              "features/applicant-tracking",
+              "features/pipelines",
+              "features/team-collaboration"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/creating-your-first-job",
+              "guides/managing-applications",
+              "guides/setting-up-pipelines",
+              "guides/customizing-career-page",
+              "guides/team-invitations"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/custom-questions",
+              "advanced/evaluation-scoring",
+              "advanced/activity-logs",
+              "advanced/multi-organization"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "api/organizations",
+              "api/jobs",
+              "api/applicants",
+              "api/pipelines",
+              "api/categories"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Beautiful Career Pages - Create branded, customizable career pages for your organization",
+    "Job Management - Post jobs with detailed descriptions, requirements, salary ranges, and custom questions",
+    "Applicant Tracking System - Track applicants through customizable pipeline stages with evaluations and scoring",
+    "Team Collaboration - Invite team members with role-based access to manage hiring together",
+    "Multi-Organization Support - Manage multiple organizations from a single account",
+    "Resume & File Storage - Integrated S3 storage for applicant resumes and documents",
+    "Activity Logging - Complete audit trail of all hiring activities and applicant movements",
+    "Custom Pipelines & Stages - Define custom hiring workflows for different job types",
+    "Evaluation & Scoring - Built-in scoring system for candidate evaluation by multiple interviewers",
+    "Email & Communication Tracking - Track all communications with applicants in one place"
+  ],
+  "publicApiSurface": [
+    "Organizations - Create, manage, and customize organization profiles with branded career pages",
+    "Jobs - Post and manage job listings with full details (type, location, salary, experience level, custom questions)",
+    "Applicants - Track candidates through application stages with status management (SUBMITTED, UNDERREVIEW, INTERVIEW, OFFER, REJECTED, HIRED)",
+    "Pipelines & Stages - Configure custom hiring workflows with multiple stages",
+    "Job Categories - Organize jobs into custom categories per organization",
+    "Team Members - Invite and manage team members with role-based permissions (owner, member)",
+    "Evaluations - Score and provide feedback on applicants at different stages",
+    "Activity Logs - View complete audit trail of actions and changes",
+    "Authentication - OAuth (Google) and email/password authentication via Better Auth",
+    "File Storage - Upload and manage applicant resumes via S3-compatible storage"
+  ]
+}
