@@ -1,0 +1,248 @@
+---
+title: Activity logs
+description: Track all actions and changes made to candidate applications
+---
+
+Activity logs provide a complete audit trail of all actions performed on candidate applications, helping you maintain transparency and track the hiring process.
+
+## Overview
+
+Every significant action in your hiring workflow is automatically logged, including:
+
+- Stage movements
+- Evaluation submissions
+- Status changes
+- Communication records
+- And more
+
+This creates a comprehensive timeline of each candidate's journey through your hiring pipeline.
+
+## ActivityLog model
+
+The core structure for tracking activities:
+
+```prisma
+model ActivityLog {
+  id             String       @id @default(cuid())
+  action         String       // e.g. "MOVED_STAGE", "ADDED_EVALUATION"
+  metadata       Json?        // Stores old/new values
+  actorId        String?
+  actor          User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  applicantId    String
+  applicant      Applicant    @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@index([applicantId])
+  @@map("activity_log")
+}
+```
+
+## Common action types
+
+<CardGroup cols={2}>
+  <Card title="MOVED_STAGE" icon="arrows-turn-right">
+    Candidate moved between pipeline stages
+  </Card>
+  <Card title="ADDED_EVALUATION" icon="star">
+    Interviewer submitted an evaluation
+  </Card>
+  <Card title="STATUS_CHANGED" icon="toggle-on">
+    Application status updated
+  </Card>
+  <Card title="CREATED_APPLICATION" icon="file-circle-plus">
+    New application submitted
+  </Card>
+</CardGroup>
+
+## Creating activity logs
+
+Activity logs are typically created automatically by server functions:
+
+### Stage movement
+
+```typescript
+await prisma.activityLog.create({
+  data: {
+    action: "MOVED_STAGE",
+    actorId: session.user.id,
+    applicantId: applicantId,
+    metadata: {
+      from: "Phone Screen",
+      to: "Technical Interview"
+    }
+  }
+});
+```
+
+### Evaluation submission
+
+```typescript
+await prisma.activityLog.create({
+  data: {
+    action: "ADDED_EVALUATION",
+    actorId: session.user.id,
+    applicantId: applicantId,
+    metadata: {
+      stage: "Technical Interview",
+      score: 4
+    }
+  }
+});
+```
+
+## Metadata field
+
+The `metadata` JSON field stores contextual information about each action. This flexible structure allows you to capture:
+
+- Previous and new values for changes
+- Scores and ratings
+- Stage names
+- Additional context specific to the action
+
+```typescript
+// Example metadata structures
+const stageChangeMetadata = {
+  from: "Initial Review",
+  to: "Phone Screen"
+};
+
+const evaluationMetadata = {
+  stage: "Technical Interview",
+  score: 5,
+  interviewer: "Jane Smith"
+};
+
+const statusChangeMetadata = {
+  from: "UNDERREVIEW",
+  to: "INTERVIEW"
+};
+```
+
+## Viewing activity history
+
+Retrieve the complete activity log for a candidate:
+
+```typescript
+const applicant = await prisma.applicant.findUnique({
+  where: { id: applicantId },
+  include: {
+    activityLogs: {
+      include: {
+        actor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    }
+  }
+});
+```
+
+## Actor tracking
+
+The `actorId` field records who performed each action. This is nullable because:
+
+- Some actions are system-generated
+- The user who performed the action may have been deleted
+- Automated processes don't have a user actor
+
+```typescript
+// With actor (manual action)
+{
+  action: "MOVED_STAGE",
+  actorId: "user-123",
+  actor: { name: "John Doe" }
+}
+
+// Without actor (automated action)
+{
+  action: "CREATED_APPLICATION",
+  actorId: null,
+  actor: null
+}
+```
+
+<Info>
+When a user is deleted, the `actorId` is set to `null` but the activity log entry remains, preserving the audit trail.
+</Info>
+
+## Complete applicant history
+
+Get a comprehensive view including logs, communications, and evaluations:
+
+```typescript
+const history = await prisma.applicant.findUnique({
+  where: { id: applicantId },
+  include: {
+    activityLogs: {
+      include: { actor: true },
+      orderBy: { createdAt: "desc" }
+    },
+    communications: {
+      orderBy: { createdAt: "desc" }
+    },
+    evaluations: {
+      include: { stage: true, interviewer: true },
+      orderBy: { createdAt: "desc" }
+    }
+  }
+});
+```
+
+## Filtering logs by action type
+
+Find specific types of activities:
+
+```typescript
+// Get all stage movements
+const stageMovements = await prisma.activityLog.findMany({
+  where: {
+    applicantId,
+    action: "MOVED_STAGE"
+  },
+  orderBy: { createdAt: "asc" }
+});
+
+// Get all evaluations added
+const evaluationLogs = await prisma.activityLog.findMany({
+  where: {
+    applicantId,
+    action: "ADDED_EVALUATION"
+  },
+  include: { actor: true }
+});
+```
+
+## Time-based queries
+
+Track activities within specific time periods:
+
+```typescript
+const recentActivity = await prisma.activityLog.findMany({
+  where: {
+    applicantId,
+    createdAt: {
+      gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+    }
+  },
+  include: { actor: true },
+  orderBy: { createdAt: "desc" }
+});
+```
+
+<Tip>
+Activity logs are automatically deleted when the associated applicant is removed due to cascade deletion.
+</Tip>
+
+## Best practices
+
+1. **Log all significant actions**: Ensure every important change creates an activity log entry
+2. **Use descriptive action names**: Follow a consistent naming convention (VERB_NOUN)
+3. **Include relevant metadata**: Store enough context to understand what changed
+4. **Display logs to users**: Show hiring managers the complete candidate timeline
+5. **Don't delete logs**: Activity logs are your audit trail—preserve them

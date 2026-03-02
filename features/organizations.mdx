@@ -1,0 +1,85 @@
+---
+title: Organizations
+description: Create and manage organizations with multi-workspace support and role-based access control
+---
+
+Organizations are the foundation of WeGotWork. Each organization represents a separate workspace where you can manage jobs, applicants, and team members with complete isolation.
+
+## Creating an organization
+
+You can create unlimited organizations to manage different companies or departments:
+
+1. Navigate to your dashboard
+2. Click **Create New Organization**
+3. Enter the organization name
+4. Provide a unique slug (used in your career page URL)
+5. Click **Create**
+
+The slug becomes part of your public career page URL: `yourdomain.com/view-organization/{slug}`
+
+## Multi-organization support
+
+WeGotWork allows you to manage multiple organizations from a single account. This is useful for:
+
+- Managing multiple companies
+- Separating departments within a company
+- Running hiring agencies with multiple clients
+
+You can quickly switch between organizations using the organization selector in the navigation.
+
+## Organization settings
+
+Only organization **owners** can access and modify organization settings. You can customize:
+
+### Basic information
+
+- **Name**: The display name for your organization
+- **Slug**: The URL-friendly identifier (e.g., `acme-corp`)
+- **Logo**: Upload a custom logo for your career page
+- **Website**: Link to your company website
+- **Description**: A brief description shown on your career page
+
+### Customizing your career page
+
+Your organization's career page is automatically generated at `/view-organization/{slug}`. This page displays:
+
+- Organization logo and information
+- All published jobs grouped by categories
+- Filter options by location and job type
+- Branded application forms
+
+<Note>
+The career page is publicly accessible and serves as your company's hiring portal.
+</Note>
+
+## Organization roles
+
+WeGotWork supports two role types:
+
+- **Owner**: Full access to all features, settings, and member management
+- **Member**: Can view and manage jobs and applicants, but cannot modify organization settings or manage team members
+
+## Switching organizations
+
+When you belong to multiple organizations:
+
+1. Click the organization selector in the navigation
+2. Select the organization you want to work with
+3. Your current organization is stored in your session
+
+All subsequent actions apply to the currently selected organization.
+
+## Deleting an organization
+
+<Warning>
+Deleting an organization is permanent and will remove all associated jobs, applicants, and data.
+</Warning>
+
+To delete an organization:
+
+1. Navigate to **Settings**
+2. Scroll to the danger zone
+3. Click **Delete Organization**
+4. Confirm the deletion
+
+Only organization owners can delete organizations.

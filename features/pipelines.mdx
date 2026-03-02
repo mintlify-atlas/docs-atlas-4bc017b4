@@ -1,0 +1,251 @@
+---
+title: Pipelines
+description: Create custom hiring workflows with stages to standardize and track your recruitment process
+---
+
+Pipelines let you define custom hiring workflows with multiple stages. Each job can be linked to a pipeline to track candidates through a consistent process.
+
+## What are pipelines?
+
+A pipeline is a series of stages that represent your hiring workflow. For example:
+
+- **Application Review** → **Phone Screen** → **Technical Interview** → **Final Interview** → **Offer**
+
+Pipelines help you:
+
+- Standardize hiring across similar roles
+- Track candidate progress visually
+- Identify bottlenecks in your process
+- Ensure consistent evaluation
+
+## Creating a pipeline
+
+To create a new pipeline:
+
+1. Navigate to **Pipelines** in your organization
+2. Click **Create Pipeline**
+3. Enter a pipeline name (e.g., "Engineering Pipeline")
+4. Add hiring stages:
+   - Click **Add Stage**
+   - Enter stage name (e.g., "Phone Screen")
+   - Repeat for each stage in your process
+5. Click **Create Pipeline**
+
+Your pipeline is now ready to use with jobs.
+
+<Tip>
+Create different pipelines for different role types (e.g., Engineering, Sales, Executive) to match your hiring process.
+</Tip>
+
+## Pipeline stages
+
+Stages represent steps in your hiring process:
+
+### Stage properties
+
+- **Name**: Descriptive stage name (e.g., "Technical Interview")
+- **Order**: The sequence position (automatically managed)
+- **Applicants**: Candidates currently in this stage
+
+### Common stage examples
+
+- **Application Review**: Initial resume screening
+- **Phone Screen**: Brief phone conversation
+- **Assessment**: Take-home assignment or test
+- **Technical Interview**: In-depth technical evaluation
+- **Team Interview**: Cultural fit and team meeting
+- **Final Interview**: Decision-maker interview
+- **Reference Check**: Verify background and references
+- **Offer**: Extend and negotiate offer
+
+### Reordering stages
+
+You can adjust stage order after creation:
+
+1. Open the pipeline editor
+2. Drag stages to reorder them
+3. Changes save automatically
+
+Stage order reflects your actual hiring sequence.
+
+## Linking pipelines to jobs
+
+Connect a pipeline to a job:
+
+1. Navigate to **Jobs**
+2. Edit the job you want to link
+3. Select a pipeline from the **Pipeline** dropdown
+4. Click **Save Changes**
+
+All applicants for this job will now flow through the pipeline stages.
+
+<Note>
+You can link multiple jobs to the same pipeline if they share a similar hiring process.
+</Note>
+
+## Pipeline board view
+
+Visualize your hiring pipeline with a Kanban-style board:
+
+### Accessing the board
+
+1. Navigate to **Applicants** for a job with a linked pipeline
+2. The pipeline board displays automatically
+3. See all stages and applicants in columns
+
+### Board layout
+
+The pipeline board shows:
+
+- **Stage columns**: One column per stage
+- **Applicant cards**: Candidate cards in each stage
+- **Stage counts**: Number of applicants per stage
+- **Add stage**: Button to add new stages
+
+### Moving applicants
+
+Drag and drop applicants between stages:
+
+1. Click and hold an applicant card
+2. Drag to the target stage column
+3. Release to move the applicant
+4. Movement is logged automatically
+
+This visual workflow makes it easy to manage multiple candidates.
+
+## Stage-specific evaluations
+
+Team members can evaluate candidates at each stage:
+
+### Adding stage evaluations
+
+1. Open an applicant profile
+2. Navigate to the current stage
+3. Click **Add Evaluation**
+4. Provide:
+   - **Score**: 1-5 rating
+   - **Feedback**: Detailed comments
+   - **Stage**: Automatically set to current stage
+5. Submit evaluation
+
+Evaluations are attached to specific stages, allowing you to track feedback at each step.
+
+### Viewing stage history
+
+See all evaluations for a stage:
+
+- Average score from all evaluators
+- Individual team member feedback
+- Timestamp and evaluator name
+
+This helps make data-driven hiring decisions.
+
+## Activity logs and stage movements
+
+Every stage change is tracked:
+
+- **When**: Timestamp of the movement
+- **Who**: Team member who moved the applicant
+- **From → To**: Previous and new stage
+- **Metadata**: Additional context like reasons
+
+View the complete stage history in the applicant timeline.
+
+## Pipeline analytics
+
+Understand your hiring performance:
+
+- **Stage duration**: How long candidates spend in each stage
+- **Conversion rates**: Percentage moving between stages
+- **Bottlenecks**: Stages with highest drop-off
+- **Time to hire**: Average time from application to offer
+
+Analytics help optimize your hiring process.
+
+## Managing pipelines
+
+### Editing pipelines
+
+Modify existing pipelines:
+
+1. Navigate to **Pipelines**
+2. Select the pipeline to edit
+3. Update the name or stages
+4. Click **Save Changes**
+
+Changes apply to all linked jobs.
+
+### Adding stages to existing pipelines
+
+Expand your process:
+
+1. Open the pipeline editor
+2. Click **Add Stage**
+3. Enter the stage name
+4. Position in the correct order
+5. Save changes
+
+New stages appear on the pipeline board immediately.
+
+### Deleting stages
+
+<Warning>
+Deleting a stage moves all applicants in that stage to the previous stage. Be careful when removing stages with active candidates.
+</Warning>
+
+To delete a stage:
+
+1. Open the pipeline editor
+2. Click the delete icon on the stage
+3. Confirm deletion
+
+### Deleting pipelines
+
+Remove unused pipelines:
+
+1. Navigate to **Pipelines**
+2. Select the pipeline to delete
+3. Click **Delete Pipeline**
+4. Confirm deletion
+
+Jobs linked to deleted pipelines will have their pipeline reference cleared.
+
+## Best practices
+
+### Start simple
+
+Begin with 4-6 stages:
+
+- Application Review
+- Interview
+- Final Interview
+- Offer
+
+Add complexity as your process matures.
+
+### Use consistent naming
+
+Standardize stage names across pipelines:
+
+- "Phone Screen" instead of "Initial Call"
+- "Technical Interview" instead of "Tech Round"
+
+This makes reporting and analytics more useful.
+
+### Match your actual process
+
+Design pipelines that reflect reality:
+
+- Don't add stages you won't use
+- Order stages chronologically
+- Update as your process evolves
+
+### Train your team
+
+Ensure everyone understands:
+
+- When to move candidates
+- How to add evaluations
+- What each stage represents
+
+Consistent usage improves data quality.

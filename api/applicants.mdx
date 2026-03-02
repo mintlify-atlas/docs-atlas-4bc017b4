@@ -1,0 +1,313 @@
+---
+title: Applicants
+description: Manage job applicants and track their application status
+---
+
+Applicants represent candidates who have applied to job postings. Track their status, move them through pipeline stages, and view their application history.
+
+## List applicants
+
+Get all applicants for a specific job or organization.
+
+### Parameters
+
+<ParamField path="jobId" type="string" required>
+  The job ID to get applicants for
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="applicants" type="array">
+  Array of applicant objects ordered by creation date (oldest first)
+  
+  <Expandable title="applicant object">
+    <ResponseField name="id" type="string">
+      Unique applicant identifier
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Applicant's full name
+    </ResponseField>
+    
+    <ResponseField name="email" type="string">
+      Applicant's email address
+    </ResponseField>
+    
+    <ResponseField name="status" type="enum">
+      Current application status
+      
+      Options: `SUBMITTED`, `UNDERREVIEW`, `INTERVIEW`, `OFFER`, `REJECTED`, `HIRED`
+    </ResponseField>
+    
+    <ResponseField name="resumeKey" type="string">
+      Storage key for the resume file (use to generate signed URL)
+    </ResponseField>
+    
+    <ResponseField name="responses" type="object">
+      JSON object containing answers to custom job questions
+    </ResponseField>
+    
+    <ResponseField name="jobId" type="string">
+      ID of the job they applied to
+    </ResponseField>
+    
+    <ResponseField name="currentStageId" type="string | null">
+      Current pipeline stage ID (if using pipelines)
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="datetime">
+      Application submission timestamp
+    </ResponseField>
+    
+    <ResponseField name="updatedAt" type="datetime">
+      Last update timestamp
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message if job not found or internal error
+</ResponseField>
+
+## Get applicant details
+
+Retrieve detailed information about a specific applicant, including resume URL.
+
+### Parameters
+
+<ParamField path="applicantId" type="string" required>
+  The applicant's unique ID
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="applicant" type="object | null">
+  The applicant object (null if not found)
+  
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Applicant ID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Applicant's full name
+    </ResponseField>
+    
+    <ResponseField name="email" type="string">
+      Applicant's email address
+    </ResponseField>
+    
+    <ResponseField name="status" type="enum">
+      Application status
+    </ResponseField>
+    
+    <ResponseField name="resumeKey" type="string">
+      Resume storage key
+    </ResponseField>
+    
+    <ResponseField name="responses" type="object">
+      Answers to custom questions
+    </ResponseField>
+    
+    <ResponseField name="jobId" type="string">
+      Associated job ID
+    </ResponseField>
+    
+    <ResponseField name="currentStageId" type="string | null">
+      Current pipeline stage
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="datetime">
+      Application date
+    </ResponseField>
+    
+    <ResponseField name="updatedAt" type="datetime">
+      Last update
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  Pre-signed URL to download/view the applicant's resume (expires after a set time)
+</ResponseField>
+
+## Update applicant status
+
+Update an applicant's application status.
+
+### Parameters
+
+<ParamField path="id" type="string" required>
+  The applicant ID
+</ParamField>
+
+<ParamField path="status" type="enum" required>
+  New status to set
+  
+  Options: `SUBMITTED`, `UNDERREVIEW`, `INTERVIEW`, `OFFER`, `REJECTED`, `HIRED`
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the update was successful
+</ResponseField>
+
+<ResponseField name="applicant" type="object">
+  The updated applicant object
+</ResponseField>
+
+### Error handling
+
+The endpoint will throw an error if:
+- User is not authenticated ("Unauthenticated")
+- Applicant is not found ("Applicant not found")
+- User doesn't have access to the organization ("Access denied")
+- Update fails ("Failed to update applicant status")
+
+## Move applicant to pipeline stage
+
+Move an applicant to a different stage in the hiring pipeline.
+
+### Parameters
+
+<ParamField path="applicantId" type="string" required>
+  The applicant ID
+</ParamField>
+
+<ParamField path="newStageId" type="string" required>
+  The target pipeline stage ID
+</ParamField>
+
+### Response
+
+Returns the updated applicant object with the new stage information.
+
+<ResponseField name="id" type="string">
+  Applicant ID
+</ResponseField>
+
+<ResponseField name="currentStageId" type="string">
+  Updated stage ID
+</ResponseField>
+
+<ResponseField name="currentStage" type="object">
+  Full stage object with name and order
+</ResponseField>
+
+### Activity logging
+
+When an applicant is moved to a new stage, an activity log entry is automatically created with:
+- Action: "MOVED_STAGE"
+- Metadata containing the previous stage name and new stage name
+- Actor ID (the user who performed the action)
+- Timestamp
+
+## Get applicant history
+
+Retrieve complete history and activity for an applicant.
+
+### Parameters
+
+<ParamField path="applicantId" type="string" required>
+  The applicant ID
+</ParamField>
+
+### Response
+
+Returns the applicant object with related data:
+
+<ResponseField name="activityLogs" type="array">
+  All activity logs ordered by creation date (newest first)
+  
+  <Expandable title="activity log object">
+    <ResponseField name="id" type="string">
+      Log entry ID
+    </ResponseField>
+    
+    <ResponseField name="action" type="string">
+      Action type (e.g., "MOVED_STAGE", "ADDED_EVALUATION")
+    </ResponseField>
+    
+    <ResponseField name="metadata" type="object">
+      Additional context about the action (e.g., from/to stages)
+    </ResponseField>
+    
+    <ResponseField name="actor" type="object">
+      User who performed the action
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="datetime">
+      When the action occurred
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="communications" type="array">
+  Communication history (emails, notes, calls) ordered by date
+  
+  <Expandable title="communication object">
+    <ResponseField name="id" type="string">
+      Communication ID
+    </ResponseField>
+    
+    <ResponseField name="type" type="string">
+      Communication type: EMAIL, NOTE, or CALL
+    </ResponseField>
+    
+    <ResponseField name="content" type="string">
+      Communication content
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="datetime">
+      Communication timestamp
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="evaluations" type="array">
+  Interview evaluations ordered by date
+  
+  <Expandable title="evaluation object">
+    <ResponseField name="id" type="string">
+      Evaluation ID
+    </ResponseField>
+    
+    <ResponseField name="score" type="number">
+      Rating on 1-5 scale
+    </ResponseField>
+    
+    <ResponseField name="feedback" type="string | null">
+      Written feedback
+    </ResponseField>
+    
+    <ResponseField name="interviewer" type="object">
+      User who conducted the evaluation
+    </ResponseField>
+    
+    <ResponseField name="stage" type="object">
+      Pipeline stage this evaluation is for
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="datetime">
+      Evaluation timestamp
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Applicant status values
+
+- `SUBMITTED` - Application received, awaiting review
+- `UNDERREVIEW` - Application is being reviewed
+- `INTERVIEW` - Candidate is in interview stage
+- `OFFER` - Offer has been extended
+- `REJECTED` - Application rejected
+- `HIRED` - Candidate has been hired

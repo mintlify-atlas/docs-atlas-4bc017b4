@@ -1,0 +1,141 @@
+---
+title: Career pages
+description: Branded public career pages for each organization to attract and engage candidates
+---
+
+Each organization in WeGotWork has its own branded career page that serves as your public hiring portal. Candidates can discover open positions, filter by criteria, and apply directly through these pages.
+
+## Accessing your career page
+
+Your career page is automatically available at:
+
+```
+yourdomain.com/view-organization/{organization-slug}
+```
+
+For example, if your organization slug is `acme-corp`, candidates can visit:
+- `yourdomain.com/view-organization/acme-corp`
+
+Share this URL on your website, social media, or job boards to drive applications.
+
+## Career page components
+
+### Organization header
+
+The career page displays your organization's branding:
+
+- **Logo**: Your uploaded organization logo
+- **Name**: Organization display name
+- **Description**: Company description and culture
+- **Website**: Link to your company website
+
+This information is pulled from your organization settings and updates automatically.
+
+### Job listings
+
+All published jobs appear on your career page, organized by:
+
+- **Job categories**: Group related positions (e.g., Engineering, Sales, Marketing)
+- **Job type**: Full-time, part-time, contract, or internship
+- **Location**: City and country, or remote
+- **Location mode**: Onsite, remote, or hybrid
+
+### Filtering and search
+
+Candidates can filter jobs by:
+
+- **Location**: Filter by city or view all remote positions
+- **Job type**: Show only full-time, part-time, contracts, or internships
+- **Category**: Browse positions by department or function
+
+Filters help candidates quickly find relevant opportunities.
+
+## Customizing your career page
+
+You can customize the appearance and content through organization settings:
+
+### Branding
+
+1. Navigate to **Settings**
+2. Upload a high-quality logo
+3. Add a compelling description
+4. Include your website URL
+5. Click **Save Changes**
+
+<Tip>
+Use a square logo (1:1 aspect ratio) for best results. The logo appears as a 128px avatar on your career page.
+</Tip>
+
+### Organizing jobs with categories
+
+Create job categories to group related positions:
+
+1. Navigate to **Categories**
+2. Click **Create Category**
+3. Enter a category name (e.g., "Engineering", "Sales")
+4. Assign jobs to categories when creating or editing them
+
+Categories help candidates navigate large job listings and find relevant roles.
+
+## Job detail pages
+
+Each job has its own detail page at:
+
+```
+yourdomain.com/view-organization/{slug}/{job-id}
+```
+
+The job detail page includes:
+
+- Full job description with rich text formatting
+- Job metadata (type, location, salary range)
+- Experience level requirements
+- Custom application questions
+- Application form
+
+## Application process
+
+When candidates apply through your career page:
+
+1. They fill out the application form with:
+   - Name and email (required)
+   - Resume upload (required)
+   - Answers to custom questions
+2. The application is submitted with status `SUBMITTED`
+3. You receive the application in your applicant tracking system
+4. The resume is securely stored and accessible to your team
+
+<Note>
+Applications are immediately visible in your WeGotWork dashboard under **Applicants**.
+</Note>
+
+## Publishing jobs
+
+Only jobs with status `PUBLISHED` appear on your career page:
+
+- `DRAFT`: Not visible to candidates
+- `PUBLISHED`: Visible and accepting applications
+- `ARCHIVED`: Not visible but retained for records
+- `CLOSED`: Not visible and no longer accepting applications
+
+Change job status in the job editor to control visibility.
+
+## Mobile-responsive design
+
+Career pages are fully responsive and optimized for:
+
+- Desktop browsers
+- Tablets
+- Mobile devices
+
+Candidates can browse and apply from any device.
+
+## SEO and discoverability
+
+Each career page includes:
+
+- Dynamic meta titles with organization name
+- Descriptive page titles for each job
+- Clean, crawlable URLs
+
+This helps search engines index your job openings and improves organic discovery.

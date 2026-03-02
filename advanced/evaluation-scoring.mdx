@@ -1,0 +1,189 @@
+---
+title: Evaluation scoring
+description: Rate and provide feedback on candidates throughout the hiring process
+---
+
+The evaluation system enables interviewers and team members to score candidates and provide structured feedback at different stages of your hiring pipeline.
+
+## Scoring system
+
+WeGotWork uses a 1-5 scale for candidate evaluations:
+
+<CardGroup cols={5}>
+  <Card title="1" icon="star">
+    Poor fit
+  </Card>
+  <Card title="2" icon="star">
+    Below average
+  </Card>
+  <Card title="3" icon="star">
+    Average
+  </Card>
+  <Card title="4" icon="star">
+    Good fit
+  </Card>
+  <Card title="5" icon="star">
+    Excellent fit
+  </Card>
+</CardGroup>
+
+Each evaluation is tied to a specific pipeline stage, allowing you to track candidate progress and gather feedback from multiple interviewers.
+
+## Creating evaluations
+
+Interviewers can submit evaluations after reviewing or interviewing a candidate:
+
+```typescript
+const evaluation = await prisma.evaluation.create({
+  data: {
+    score: 4,
+    feedback: "Strong technical skills and great communication. Would be a good fit for the team.",
+    interviewerId: session.user.id,
+    applicantId: "applicant-id",
+    stageId: "stage-id"
+  },
+  include: {
+    stage: true,
+    interviewer: true
+  }
+});
+```
+
+<Info>
+Each evaluation automatically creates an activity log entry to maintain an audit trail.
+</Info>
+
+## Evaluation model
+
+The `Evaluation` model structure:
+
+```prisma
+model Evaluation {
+  id             String       @id @default(cuid())
+  score          Int          // 1-5 scale
+  feedback       String?
+  interviewerId  String
+  interviewer    User         @relation(fields: [interviewerId], references: [id])
+  applicantId    String
+  applicant      Applicant    @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  stageId        String
+  stage          Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([applicantId])
+  @@index([stageId])
+  @@map("evaluation")
+}
+```
+
+## Retrieving evaluations
+
+View all evaluations for a candidate:
+
+```typescript
+const applicant = await prisma.applicant.findUnique({
+  where: { id: applicantId },
+  include: {
+    evaluations: {
+      include: {
+        stage: true,
+        interviewer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    }
+  }
+});
+```
+
+## Interviewer feedback
+
+The `feedback` field is optional but highly recommended. Detailed feedback helps with:
+
+- Making informed hiring decisions
+- Providing context for scores
+- Sharing insights with other team members
+- Documenting the interview process
+
+### Feedback best practices
+
+<AccordionGroup>
+  <Accordion title="Be specific">
+    Instead of "good candidate," write "demonstrated strong problem-solving skills during the coding challenge, completing it 15 minutes ahead of schedule."
+  </Accordion>
+  
+  <Accordion title="Focus on job requirements">
+    Relate your feedback to the specific skills and qualifications needed for the role.
+  </Accordion>
+  
+  <Accordion title="Include examples">
+    Reference specific moments from the interview or concrete examples from the candidate's background.
+  </Accordion>
+  
+  <Accordion title="Be objective">
+    Avoid personal biases and focus on job-relevant competencies.
+  </Accordion>
+</AccordionGroup>
+
+## Average scores
+
+Calculate the average score across all evaluations for a candidate:
+
+```typescript
+const evaluations = await prisma.evaluation.findMany({
+  where: { applicantId }
+});
+
+const averageScore = evaluations.length > 0
+  ? evaluations.reduce((sum, e) => sum + e.score, 0) / evaluations.length
+  : 0;
+
+console.log(`Average score: ${averageScore.toFixed(1)}/5`);
+```
+
+## Stage-specific evaluations
+
+You can filter evaluations by pipeline stage to see how candidates performed at different interview phases:
+
+```typescript
+const technicalInterviewEvals = await prisma.evaluation.findMany({
+  where: {
+    applicantId,
+    stage: {
+      name: "Technical Interview"
+    }
+  },
+  include: { interviewer: true }
+});
+```
+
+<Warning>
+Evaluations are automatically deleted when their associated applicant is removed due to the `onDelete: Cascade` relationship.
+</Warning>
+
+## Activity log integration
+
+When you create an evaluation, an activity log entry is automatically generated:
+
+```typescript
+await prisma.activityLog.create({
+  data: {
+    action: "ADDED_EVALUATION",
+    actorId: session.user.id,
+    applicantId: applicantId,
+    metadata: {
+      stage: evaluation.stage.name,
+      score: evaluation.score
+    }
+  }
+});
+```
+
+See the [activity logs](/advanced/activity-logs) documentation for more details on tracking candidate history.

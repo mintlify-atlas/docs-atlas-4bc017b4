@@ -1,0 +1,195 @@
+---
+title: Custom questions
+description: Add custom screening questions to job applications
+---
+
+Custom questions allow you to collect specific information from applicants beyond the standard resume and contact details. You can add various types of questions to tailor the application process to your hiring needs.
+
+## Question types
+
+WeGotWork supports several question types to gather different kinds of information:
+
+### SHORT_ANSWER
+
+Best for brief, single-line responses like job titles or years of experience.
+
+```typescript
+{
+  type: "SHORT_ANSWER",
+  label: "What is your current job title?",
+  placeholder: "e.g., Senior Software Engineer",
+  required: true
+}
+```
+
+### LONG_ANSWER
+
+Ideal for detailed responses like motivation letters or project descriptions.
+
+```typescript
+{
+  type: "LONG_ANSWER",
+  label: "Why are you interested in this position?",
+  placeholder: "Tell us about your motivation...",
+  required: true
+}
+```
+
+### SELECT
+
+Provides a dropdown menu for single-choice selections.
+
+```typescript
+{
+  type: "SELECT",
+  label: "How did you hear about us?",
+  options: ["LinkedIn", "Job Board", "Referral", "Company Website"],
+  required: false
+}
+```
+
+### MULTI_SELECT
+
+Allows applicants to select multiple options from a list.
+
+```typescript
+{
+  type: "MULTI_SELECT",
+  label: "Which programming languages are you proficient in?",
+  options: ["JavaScript", "Python", "Java", "Go", "Rust"],
+  required: true
+}
+```
+
+### CHECKBOX
+
+Useful for yes/no questions or consent requirements.
+
+```typescript
+{
+  type: "CHECKBOX",
+  label: "I confirm that I am eligible to work in this country",
+  required: true
+}
+```
+
+### FILE
+
+Enables applicants to upload additional documents like portfolios or certificates.
+
+```typescript
+{
+  type: "FILE",
+  label: "Upload your portfolio (optional)",
+  placeholder: "PDF, max 10MB",
+  required: false
+}
+```
+
+## Adding questions to jobs
+
+You can add custom questions when creating or editing a job posting. Questions are stored in the `JobQuestion` model and linked to specific jobs.
+
+<CodeGroup>
+
+```typescript Create job with questions
+const job = await prisma.job.create({
+  data: {
+    title: "Frontend Developer",
+    organizationId: organization.id,
+    questions: {
+      create: [
+        {
+          type: "SHORT_ANSWER",
+          label: "Years of React experience",
+          placeholder: "e.g., 3 years",
+          required: true,
+          order: 0
+        },
+        {
+          type: "MULTI_SELECT",
+          label: "Select your frontend skills",
+          options: ["React", "Vue", "Angular", "Svelte"],
+          required: true,
+          order: 1
+        }
+      ]
+    }
+  }
+});
+```
+
+```typescript Update job questions
+const job = await prisma.job.update({
+  where: { id: jobId },
+  data: {
+    questions: {
+      deleteMany: {},
+      create: [
+        {
+          type: "LONG_ANSWER",
+          label: "Describe your ideal work environment",
+          required: false,
+          order: 0
+        }
+      ]
+    }
+  }
+});
+```
+
+</CodeGroup>
+
+## Database schema
+
+The `JobQuestion` model in your Prisma schema:
+
+```prisma
+model JobQuestion {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  type        String   // SHORT_ANSWER, LONG_ANSWER, SELECT, etc.
+  label       String
+  placeholder String?
+  required    Boolean  @default(false)
+  options     String[] // For SELECT or MULTI_SELECT
+  order       Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([jobId])
+  @@map("job_question")
+}
+```
+
+## Ordering questions
+
+Use the `order` field to control the sequence in which questions appear to applicants. Questions are typically sorted in ascending order:
+
+```typescript
+const questions = await prisma.jobQuestion.findMany({
+  where: { jobId },
+  orderBy: { order: "asc" }
+});
+```
+
+<Tip>
+Keep your application forms concise. Aim for 3-5 custom questions to avoid applicant drop-off.
+</Tip>
+
+## Applicant responses
+
+Applicant responses to custom questions are stored in the `Applicant.responses` JSON field, allowing you to review answers alongside their resume and other application materials.
+
+```typescript
+const applicant = await prisma.applicant.findUnique({
+  where: { id: applicantId },
+  include: { job: { include: { questions: true } } }
+});
+
+console.log(applicant.responses);
+// { "question-id-1": "5 years", "question-id-2": ["React", "Vue"] }
+```

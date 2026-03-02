@@ -1,0 +1,209 @@
+---
+title: Categories
+description: Organize jobs with custom categories
+---
+
+Job categories help organize positions by department, function, or any custom grouping. Categories can be reordered and assigned to jobs.
+
+## Create category
+
+Create a new job category for an organization.
+
+### Parameters
+
+<ParamField path="categoryName" type="string" required>
+  The name of the category (e.g., "Engineering", "Marketing", "Sales")
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="category" type="object">
+  The created category object
+  
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Unique category identifier
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Category name
+    </ResponseField>
+    
+    <ResponseField name="order" type="number">
+      Display order. Automatically set to the highest order + 1 (appends to end)
+    </ResponseField>
+    
+    <ResponseField name="organizationId" type="string">
+      Parent organization ID
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string | object">
+  Error message if creation fails
+</ResponseField>
+
+### Automatic ordering
+
+When creating a category:
+- The system finds the category with the highest `order` value
+- Sets the new category's order to `maxOrder + 1`
+- If no categories exist, sets order to `1`
+
+## List categories
+
+Get all categories for the current organization.
+
+### Response
+
+<ResponseField name="categories" type="array">
+  Array of category objects ordered by their order field (ascending)
+  
+  <Expandable title="category object">
+    <ResponseField name="id" type="string">
+      Category ID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Category name
+    </ResponseField>
+    
+    <ResponseField name="order" type="number">
+      Display order (lower numbers appear first)
+    </ResponseField>
+    
+    <ResponseField name="organizationId" type="string">
+      Organization ID
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message if request fails
+</ResponseField>
+
+## Update category order
+
+Reorder categories by updating their order values.
+
+### Parameters
+
+<ParamField path="organizationId" type="string" required>
+  The organization ID
+</ParamField>
+
+<ParamField path="newOrder" type="array" required>
+  Array of objects with category ID and new order values
+  
+  <Expandable title="order object">
+    <ParamField path="id" type="string" required>
+      Category ID
+    </ParamField>
+    
+    <ParamField path="order" type="number" required>
+      New order value for this category
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  "Updated Successfully" on success, or error message on failure
+</ResponseField>
+
+### Transaction safety
+
+The order update operation uses a database transaction to ensure all categories are updated atomically. If any update fails, all changes are rolled back.
+
+## Default categories
+
+When creating a new organization, these default categories are automatically created:
+
+### Legacy system (web)
+1. Software Development (order: 1)
+2. Finance (order: 2)
+3. Operations (order: 3)
+4. HR & Recruiting (order: 4)
+5. Security (order: 5)
+
+### New system (www)
+1. Software Development
+2. Finance
+3. Operations
+4. HR & Recruiting
+5. Security
+6. Marketing
+7. Sales
+8. Customer Success
+9. Product Management
+10. Data & Analytics
+11. Legal & Compliance
+12. Design & Creative
+13. Quality Assurance
+14. IT Support
+15. Public Relations
+16. Administration
+17. Logistics & Supply Chain
+18. Research & Development
+19. Customer Support
+20. Project Management
+21. Health & Safety
+22. Facilities & Real Estate
+23. Strategy
+24. Engineering
+25. Manufacturing
+26. Purchasing & Procurement
+27. Risk Management
+28. Training & Development
+29. Executive Leadership
+30. Content & Copywriting
+31. Social Media
+32. Advertising
+33. Business Development
+34. Event Planning
+35. Sustainability & ESG
+
+## Assigning categories to jobs
+
+Categories are assigned to jobs using the job's `categoryId` field:
+
+```typescript
+// Assign a category
+await updateJob(job, categoryId)
+
+// Remove category assignment
+await updateJob(job, "none") // or null
+```
+
+When a category is deleted, jobs assigned to that category will have their `categoryId` set to `null` (onDelete: SetNull in schema).
+
+## Reordering example
+
+To swap the order of two categories:
+
+```typescript
+const newOrder = [
+  { id: "category1_id", order: 2 },
+  { id: "category2_id", order: 1 },
+  // ... all other categories with their orders
+]
+
+await updateCategoryOrder(organizationId, newOrder)
+```
+
+<Note>
+  You must include all categories in the `newOrder` array, not just the ones being reordered. Each category should have its final desired order value.
+</Note>

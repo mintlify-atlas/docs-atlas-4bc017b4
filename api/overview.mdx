@@ -1,0 +1,201 @@
+---
+title: API overview
+description: Understand WeGotWork's API architecture, response formats, and error handling
+---
+
+WeGotWork provides both traditional API routes and Next.js server actions to power the application. The API is built with Next.js 15 and uses Better Auth for authentication.
+
+## API architecture
+
+WeGotWork uses two types of API implementations:
+
+### Next.js API routes
+
+API routes follow the Next.js App Router convention and are located at `/api/*` endpoints:
+
+- **Authentication**: `/api/auth/*` - Handled by Better Auth
+
+All API routes accept standard HTTP methods (GET, POST, PUT, DELETE) and return JSON responses.
+
+### Server actions
+
+Server actions are the primary way to interact with the backend. They are TypeScript functions marked with `"use server"` and provide type-safe, direct server-side operations.
+
+Server actions are organized by domain:
+
+- **Jobs**: Create, edit, delete, and retrieve job postings
+- **Applicants**: Manage job applicants and retrieve application data
+- **Organizations**: Create and manage workspaces
+- **Categories**: Organize jobs into custom categories
+- **Invitations**: Invite team members to organizations
+
+<Note>
+Server actions automatically handle session validation and redirect unauthenticated users to the login page.
+</Note>
+
+## Base URL
+
+The API base URL depends on your environment:
+
+<CodeGroup>
+```bash Development
+http://localhost:3000
+```
+
+```bash Production
+https://wegotwork.co
+```
+</CodeGroup>
+
+## Response formats
+
+### Success responses
+
+Successful server actions return objects with an `error: false` field and the requested data:
+
+```json
+{
+  "error": false,
+  "job": {
+    "id": "clx123456",
+    "title": "Senior Software Engineer",
+    "content": "",
+    "organizationId": "clx789012",
+    "createdAt": "2026-03-02T10:30:00Z"
+  }
+}
+```
+
+### Error responses
+
+Error responses include an `error: true` field and a descriptive message:
+
+```json
+{
+  "error": true,
+  "message": "Job does not exist"
+}
+```
+
+<Warning>
+Some server actions may redirect to `/` instead of returning an error response when authentication fails.
+</Warning>
+
+## Error handling
+
+WeGotWork uses consistent error handling patterns across all server actions:
+
+### Authentication errors
+
+Unauthenticated requests are redirected to the home page:
+
+```typescript
+const session = await auth.api.getSession({ headers: await headers() });
+if (!session) {
+  redirect("/");
+}
+```
+
+### Validation errors
+
+Input validation uses Zod schemas. Validation failures return field-specific errors:
+
+```json
+{
+  "error": true,
+  "message": {
+    "title": ["Title is required"],
+    "slug": ["Slug must be alphanumeric"]
+  }
+}
+```
+
+### Authorization errors
+
+Unauthorized actions return a clear error message:
+
+```json
+{
+  "error": true,
+  "message": "Not Authorized"
+}
+```
+
+### Server errors
+
+Unexpected errors are caught and return a generic error response:
+
+```json
+{
+  "error": true,
+  "message": "Internal Server Error"
+}
+```
+
+## Common patterns
+
+### Session validation
+
+All authenticated server actions follow this pattern:
+
+```typescript
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+const session = await auth.api.getSession({
+  headers: await headers(),
+});
+if (!session) {
+  redirect("/");
+}
+```
+
+### Data validation
+
+Server actions use Zod for input validation:
+
+```typescript
+import { z } from "zod";
+
+const CreateJobSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  id: z.string(),
+});
+
+const validate = CreateJobSchema.safeParse({ title, id });
+if (!validate.success) {
+  return {
+    error: true,
+    message: validate.error.flatten().fieldErrors,
+  };
+}
+```
+
+### Path revalidation
+
+Server actions that modify data use Next.js `revalidatePath` to update the cache:
+
+```typescript
+import { revalidatePath } from "next/cache";
+
+revalidatePath(`/${organizationId}/jobs`);
+```
+
+## Rate limiting
+
+Currently, WeGotWork does not implement API rate limiting. Authentication is session-based with the following limits:
+
+- Session expires after 7 days
+- Session is updated every 24 hours
+- Cookie cache enabled for 1 hour
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock" href="/api/authentication">
+    Learn how to authenticate with Better Auth
+  </Card>
+  <Card title="Server actions" icon="server" href="/api/server-actions">
+    Explore available server actions
+  </Card>
+</CardGroup>

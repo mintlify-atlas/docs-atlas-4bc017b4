@@ -1,0 +1,259 @@
+---
+title: Pipelines
+description: Create and manage hiring pipelines with custom stages
+---
+
+Pipelines define the hiring workflow with multiple stages that applicants move through. Each organization can have multiple pipelines for different types of positions.
+
+## Create pipeline
+
+Create a new hiring pipeline with custom stages.
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  Pipeline name (e.g., "Engineering Hiring", "Sales Pipeline")
+</ParamField>
+
+<ParamField path="organizationId" type="string" required>
+  The organization ID this pipeline belongs to
+</ParamField>
+
+<ParamField path="stages" type="string[]" optional>
+  Array of stage names. If not provided, defaults to: ["Screening", "Phone Interview", "Technical Test", "Onsite Interview", "Offer"]
+</ParamField>
+
+### Response
+
+Returns the created pipeline object with all stages.
+
+<ResponseField name="id" type="string">
+  Unique pipeline identifier
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Pipeline name
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  Parent organization ID
+</ResponseField>
+
+<ResponseField name="stages" type="array">
+  Array of stage objects
+  
+  <Expandable title="stage object">
+    <ResponseField name="id" type="string">
+      Stage ID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Stage name
+    </ResponseField>
+    
+    <ResponseField name="order" type="number">
+      Stage order/position (0-indexed)
+    </ResponseField>
+    
+    <ResponseField name="pipelineId" type="string">
+      Parent pipeline ID
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="datetime">
+      Creation timestamp
+    </ResponseField>
+    
+    <ResponseField name="updatedAt" type="datetime">
+      Last update timestamp
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="createdAt" type="datetime">
+  Pipeline creation timestamp
+</ResponseField>
+
+<ResponseField name="updatedAt" type="datetime">
+  Last update timestamp
+</ResponseField>
+
+### Error handling
+
+Throws "Unauthorized" error if user is not authenticated.
+
+## List pipelines
+
+Get all pipelines for an organization.
+
+### Parameters
+
+<ParamField path="organizationId" type="string" required>
+  The organization ID
+</ParamField>
+
+### Response
+
+Returns an array of pipeline objects, each including their stages ordered by stage order.
+
+<ResponseField name="[]" type="array">
+  Array of pipeline objects
+  
+  <Expandable title="pipeline object">
+    <ResponseField name="id" type="string">
+      Pipeline ID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Pipeline name
+    </ResponseField>
+    
+    <ResponseField name="organizationId" type="string">
+      Organization ID
+    </ResponseField>
+    
+    <ResponseField name="stages" type="array">
+      Stages in this pipeline, sorted by order (ascending)
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="datetime">
+      Creation date
+    </ResponseField>
+    
+    <ResponseField name="updatedAt" type="datetime">
+      Last update date
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Update pipeline
+
+Update a pipeline's name and/or stages.
+
+### Parameters
+
+<ParamField path="id" type="string" required>
+  The pipeline ID to update
+</ParamField>
+
+<ParamField path="name" type="string" optional>
+  Updated pipeline name
+</ParamField>
+
+<ParamField path="stages" type="array" optional>
+  Updated stages array. Note: This replaces all existing stages.
+  
+  <Expandable title="stage object">
+    <ParamField path="id" type="string" optional>
+      Existing stage ID (currently not used in implementation)
+    </ParamField>
+    
+    <ParamField path="name" type="string" required>
+      Stage name
+    </ParamField>
+    
+    <ParamField path="order" type="number" required>
+      Stage order/position
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+Returns the updated pipeline object with all stages.
+
+### Important notes
+
+<Warning>
+  When updating stages, the current implementation **deletes all existing stages and recreates them**. This means:
+  - Any applicants assigned to deleted stages will have their `currentStageId` set to null
+  - Stage IDs will change
+  - Historical stage references in activity logs remain intact but point to deleted stages
+</Warning>
+
+## Delete pipeline
+
+Delete a pipeline if it's not in use.
+
+### Parameters
+
+<ParamField path="id" type="string" required>
+  The pipeline ID to delete
+</ParamField>
+
+### Response
+
+Returns the deleted pipeline object on success.
+
+### Error handling
+
+Throws an error with message "Cannot delete pipeline that is being used by jobs" if any jobs are currently using this pipeline.
+
+## Pipeline structure
+
+### Default pipeline
+
+When creating an organization, a default "General Hiring Pipeline" is automatically created with these stages:
+
+1. Screening (order: 1)
+2. Interview (order: 2)
+3. Technical Task (order: 3)
+4. Final Interview (order: 4)
+5. Offer (order: 5)
+
+### Stage ordering
+
+Stages are ordered using a zero-based index in the `order` field. When displaying or moving applicants through stages:
+- Stages are sorted by `order` ascending
+- Lower order numbers appear first
+- The first stage (order: 0) is typically where new applicants start
+
+### Linking to jobs
+
+Jobs can be assigned to a pipeline using the `pipelineId` field:
+- Set `pipelineId` when creating or updating a job
+- Set to `null` to remove pipeline assignment
+- When a job uses a pipeline, applicants for that job move through the pipeline's stages
+
+## Common pipeline examples
+
+### Technical hiring pipeline
+```json
+{
+  "name": "Engineering Hiring",
+  "stages": [
+    "Application Review",
+    "Phone Screen",
+    "Technical Assessment",
+    "System Design Interview",
+    "Team Interview",
+    "Offer"
+  ]
+}
+```
+
+### Sales hiring pipeline
+```json
+{
+  "name": "Sales Pipeline",
+  "stages": [
+    "Resume Review",
+    "Recruiter Call",
+    "Hiring Manager Interview",
+    "Role Play",
+    "Final Interview",
+    "Offer"
+  ]
+}
+```
+
+### Internship pipeline
+```json
+{
+  "name": "Internship Pipeline",
+  "stages": [
+    "Application Review",
+    "Video Interview",
+    "Offer"
+  ]
+}
+```

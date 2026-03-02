@@ -1,0 +1,297 @@
+---
+title: Authentication
+description: Learn how to authenticate users with Better Auth, manage sessions, and access protected resources
+---
+
+WeGotWork uses [Better Auth](https://better-auth.com) v1.1.18 for authentication. Better Auth provides a type-safe, secure authentication system with support for multiple providers.
+
+## Authentication providers
+
+WeGotWork supports the following authentication methods:
+
+### Email and password
+
+Users can sign up and sign in using email and password credentials.
+
+```typescript
+import { authClient } from "@/lib/auth-client";
+
+await authClient.signUp.email({
+  email: "user@example.com",
+  password: "SecurePassword123",
+  name: "John Doe",
+});
+```
+
+### Google OAuth
+
+Users can authenticate using their Google account:
+
+```typescript
+await authClient.signIn.social({
+  provider: "google",
+  callbackURL: "/dashboard",
+});
+```
+
+<Note>
+Google OAuth requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` environment variables.
+</Note>
+
+## API endpoints
+
+Better Auth automatically creates authentication endpoints at `/api/auth/*`. These endpoints handle all authentication flows.
+
+### Available endpoints
+
+<ParamField path="POST /api/auth/sign-in/email" type="endpoint">
+  Sign in with email and password
+</ParamField>
+
+<ParamField path="POST /api/auth/sign-up/email" type="endpoint">
+  Create a new account with email and password
+</ParamField>
+
+<ParamField path="GET /api/auth/sign-in/google" type="endpoint">
+  Initiate Google OAuth flow
+</ParamField>
+
+<ParamField path="POST /api/auth/sign-out" type="endpoint">
+  Sign out the current user
+</ParamField>
+
+<ParamField path="GET /api/auth/session" type="endpoint">
+  Get the current session information
+</ParamField>
+
+<Warning>
+All authentication endpoints are managed by Better Auth. Do not create custom handlers for these routes.
+</Warning>
+
+## Session management
+
+WeGotWork uses cookie-based sessions with the following configuration:
+
+### Session configuration
+
+- **Session duration**: 7 days
+- **Session update interval**: 24 hours (session expiration is extended every 24 hours)
+- **Cookie cache**: Enabled for 1 hour
+
+### Custom session data
+
+Sessions are extended with custom user data:
+
+```typescript
+{
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    currentOrganizationId: string | null;
+    currentOrganization: Organization | null;
+    organizations: OrganizationUser[];
+    isPremium: boolean;
+  },
+  session: {
+    token: string;
+    expiresAt: Date;
+  }
+}
+```
+
+<Info>
+The custom session plugin automatically fetches the user's current organization and all organizations they belong to.
+</Info>
+
+## Getting authentication tokens
+
+### Client-side authentication
+
+Use the `useSession` hook to access session data in React components:
+
+```typescript
+import { useSession } from "@/lib/auth-client";
+
+function MyComponent() {
+  const { data: session, isPending } = useSession();
+
+  if (isPending) return <div>Loading...</div>;
+  if (!session) return <div>Not authenticated</div>;
+
+  return <div>Welcome, {session.user.name}!</div>;
+}
+```
+
+### Server-side authentication
+
+In server actions and API routes, use the `auth.api.getSession` method:
+
+```typescript
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+const session = await auth.api.getSession({
+  headers: await headers(),
+});
+
+if (!session) {
+  redirect("/");
+}
+
+// Access user data
+const userId = session.user.id;
+const organizationId = session.user.currentOrganizationId;
+```
+
+<Note>
+Server actions should always validate the session before performing any operations.
+</Note>
+
+## Authentication flows
+
+### Sign up flow
+
+1. User submits email, password, and name
+2. Better Auth creates a new user account
+3. User is automatically signed in
+4. Session cookie is set
+5. User is redirected to dashboard
+
+### Sign in flow
+
+1. User submits email and password
+2. Better Auth validates credentials
+3. Session is created and cookie is set
+4. User is redirected to dashboard
+
+### OAuth flow
+
+1. User clicks "Sign in with Google"
+2. User is redirected to Google OAuth consent screen
+3. User approves access
+4. Google redirects back to `/api/auth/callback/google`
+5. Better Auth creates or updates user account
+6. Session is created and cookie is set
+7. User is redirected to the specified callback URL
+
+## Protected routes
+
+All server actions are protected by default. Unauthenticated requests are redirected to the home page:
+
+```typescript
+const session = await auth.api.getSession({
+  headers: await headers(),
+});
+if (!session) {
+  redirect("/");
+}
+```
+
+## Trusted origins
+
+Better Auth is configured to accept requests from the following origins:
+
+- `http://localhost:3000` (development)
+- `https://wegotwork.co` (production)
+- `https://www.wegotwork.co` (production)
+- Any URL specified in the `BASE_URL` environment variable
+
+<Warning>
+Ensure the `BASE_URL` environment variable is set correctly in production to avoid CORS issues.
+</Warning>
+
+## Database adapter
+
+WeGotWork uses the Prisma adapter for Better Auth, which stores authentication data in PostgreSQL:
+
+```typescript
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import prisma from "./prisma";
+
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+});
+```
+
+## Client configuration
+
+The authentication client is configured with the base URL:
+
+```typescript
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+});
+```
+
+<Info>
+Set the `NEXT_PUBLIC_BASE_URL` environment variable to your production URL.
+</Info>
+
+## Best practices
+
+### Always validate sessions
+
+Never trust client-side session data. Always validate sessions on the server:
+
+```typescript
+const session = await auth.api.getSession({
+  headers: await headers(),
+});
+if (!session?.user) {
+  redirect("/");
+}
+```
+
+### Use TypeScript types
+
+Leverage the exported session type for type safety:
+
+```typescript
+import { Session } from "@/lib/auth-client";
+
+const session: Session | null = await auth.api.getSession({
+  headers: await headers(),
+});
+```
+
+### Handle redirects gracefully
+
+Use Next.js `redirect` instead of throwing errors:
+
+```typescript
+import { redirect } from "next/navigation";
+
+if (!session) {
+  redirect("/");
+}
+```
+
+## Troubleshooting
+
+### Session not persisting
+
+Ensure cookies are enabled in the browser and the `BASE_URL` matches the current domain.
+
+### CORS errors
+
+Add your domain to the `trustedOrigins` array in the Better Auth configuration.
+
+### OAuth callback fails
+
+Verify that the OAuth provider's callback URL is set to `https://yourdomain.com/api/auth/callback/google`.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="API overview" icon="book" href="/api/overview">
+    Learn about the API architecture
+  </Card>
+  <Card title="Server actions" icon="server" href="/api/server-actions">
+    Explore available server actions
+  </Card>
+</CardGroup>

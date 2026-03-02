@@ -1,0 +1,317 @@
+---
+title: Jobs
+description: Create and manage job postings in WeGotWork
+---
+
+Jobs represent open positions within an organization. Each job can have applicants, be assigned to a category and pipeline, and include custom application questions.
+
+## Create job
+
+Create a new job posting for an organization.
+
+### Parameters
+
+<ParamField path="title" type="string" required>
+  The job title (minimum 1 character)
+</ParamField>
+
+<ParamField path="id" type="string" required>
+  The organization ID to create the job for
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="message" type="string | object">
+  Success or error message. If validation fails, contains field-specific errors.
+</ResponseField>
+
+<ResponseField name="job" type="object">
+  The created job object
+  
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Unique identifier for the job
+    </ResponseField>
+    
+    <ResponseField name="title" type="string">
+      Job title
+    </ResponseField>
+    
+    <ResponseField name="content" type="string">
+      Job description/content (initialized as empty string)
+    </ResponseField>
+    
+    <ResponseField name="organizationId" type="string">
+      ID of the parent organization
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Update job
+
+Update an existing job's details.
+
+### Parameters
+
+<ParamField path="job" type="object" required>
+  The job object with updated fields
+  
+  <Expandable title="properties">
+    <ParamField path="id" type="string" required>
+      Job ID
+    </ParamField>
+    
+    <ParamField path="title" type="string">
+      Job title
+    </ParamField>
+    
+    <ParamField path="type" type="enum">
+      Employment type
+      
+      Options: `fulltime`, `parttime`, `internship`, `contract`
+    </ParamField>
+    
+    <ParamField path="status" type="enum">
+      Job status
+      
+      Options: `DRAFT`, `PUBLISHED`, `ARCHIVED`, `CLOSED`
+    </ParamField>
+    
+    <ParamField path="locationMode" type="enum">
+      Work location mode
+      
+      Options: `ONSITE`, `REMOTE`, `HYBRID`
+    </ParamField>
+    
+    <ParamField path="content" type="string">
+      Full job description (supports markdown/HTML)
+    </ParamField>
+    
+    <ParamField path="country" type="string | null">
+      Country location (set to empty string or null to clear)
+    </ParamField>
+    
+    <ParamField path="city" type="string | null">
+      City location (set to empty string or null to clear)
+    </ParamField>
+    
+    <ParamField path="address" type="string | null">
+      Full address
+    </ParamField>
+    
+    <ParamField path="remote" type="boolean">
+      Whether the position is remote (legacy field, prefer locationMode)
+    </ParamField>
+    
+    <ParamField path="salaryMin" type="number | null">
+      Minimum salary
+    </ParamField>
+    
+    <ParamField path="salaryMax" type="number | null">
+      Maximum salary
+    </ParamField>
+    
+    <ParamField path="currency" type="string">
+      Salary currency (defaults to "USD")
+    </ParamField>
+    
+    <ParamField path="salaryInterval" type="enum | null">
+      Salary payment interval
+      
+      Options: `HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `QUARTERLY`, `YEARLY`
+    </ParamField>
+    
+    <ParamField path="experienceLevel" type="enum | null">
+      Required experience level
+      
+      Options: `ENTRY`, `MID`, `SENIOR`, `LEAD`, `EXECUTIVE`
+    </ParamField>
+    
+    <ParamField path="pipelineId" type="string | null">
+      ID of the hiring pipeline to use for applicants
+    </ParamField>
+    
+    <ParamField path="questions" type="array">
+      Custom application questions
+      
+      <Expandable title="question object">
+        <ParamField path="type" type="string" required>
+          Question type: SHORT_ANSWER, LONG_ANSWER, SELECT, CHECKBOX, etc.
+        </ParamField>
+        
+        <ParamField path="label" type="string" required>
+          Question text
+        </ParamField>
+        
+        <ParamField path="placeholder" type="string">
+          Placeholder text for input
+        </ParamField>
+        
+        <ParamField path="required" type="boolean">
+          Whether the question is required (defaults to false)
+        </ParamField>
+        
+        <ParamField path="options" type="string[]">
+          Options for SELECT or MULTI_SELECT questions
+        </ParamField>
+        
+        <ParamField path="order" type="number">
+          Display order (defaults to 0)
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="categoryId" type="string | null" required>
+  Job category ID, or "none"/null to remove category assignment
+</ParamField>
+
+### Response
+
+<ResponseField name="ok" type="boolean">
+  Indicates if the update was successful
+</ResponseField>
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success or error message. Returns "Only administrator can perform this action" if unauthorized.
+</ResponseField>
+
+## List jobs
+
+Get all jobs for an organization.
+
+### Parameters
+
+<ParamField path="organizationId" type="string" required>
+  The organization ID
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="jobs" type="object">
+  Container object with jobs array
+  
+  <Expandable title="properties">
+    <ResponseField name="jobs" type="array">
+      Array of job objects ordered by creation date (newest first)
+      
+      <Expandable title="job object">
+        <ResponseField name="id" type="string">
+          Job ID
+        </ResponseField>
+        
+        <ResponseField name="title" type="string">
+          Job title
+        </ResponseField>
+        
+        <ResponseField name="type" type="enum">
+          Employment type (fulltime, parttime, internship, contract)
+        </ResponseField>
+        
+        <ResponseField name="status" type="enum">
+          Job status (DRAFT, PUBLISHED, ARCHIVED, CLOSED)
+        </ResponseField>
+        
+        <ResponseField name="locationMode" type="enum">
+          Location mode (ONSITE, REMOTE, HYBRID)
+        </ResponseField>
+        
+        <ResponseField name="content" type="string | null">
+          Job description
+        </ResponseField>
+        
+        <ResponseField name="country" type="string | null">
+          Country location
+        </ResponseField>
+        
+        <ResponseField name="city" type="string | null">
+          City location
+        </ResponseField>
+        
+        <ResponseField name="salaryMin" type="number | null">
+          Minimum salary
+        </ResponseField>
+        
+        <ResponseField name="salaryMax" type="number | null">
+          Maximum salary
+        </ResponseField>
+        
+        <ResponseField name="currency" type="string">
+          Salary currency
+        </ResponseField>
+        
+        <ResponseField name="experienceLevel" type="enum | null">
+          Required experience level
+        </ResponseField>
+        
+        <ResponseField name="createdAt" type="datetime">
+          Creation timestamp
+        </ResponseField>
+        
+        <ResponseField name="updatedAt" type="datetime">
+          Last update timestamp
+        </ResponseField>
+        
+        <ResponseField name="applicants" type="array">
+          Array of applicant objects ordered by creation date
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message if organization not found
+</ResponseField>
+
+## Job fields reference
+
+### Type (employment type)
+
+- `fulltime` / `FULLTIME` - Full-time position
+- `parttime` / `PARTTIME` - Part-time position
+- `internship` / `INTERNSHIP` - Internship
+- `contract` / `CONTRACT` - Contract position
+
+### JobStatus
+
+- `DRAFT` - Job is being drafted
+- `PUBLISHED` - Job is publicly visible
+- `ARCHIVED` - Job is archived
+- `CLOSED` - Job is no longer accepting applications
+
+### LocationMode
+
+- `ONSITE` - Work from office
+- `REMOTE` - Work remotely
+- `HYBRID` - Mix of onsite and remote
+
+### SalaryInterval
+
+- `HOURLY` - Hourly rate
+- `DAILY` - Daily rate
+- `WEEKLY` - Weekly salary
+- `MONTHLY` - Monthly salary
+- `QUARTERLY` - Quarterly salary
+- `YEARLY` - Annual salary
+
+### ExperienceLevel
+
+- `ENTRY` - Entry level (0-2 years)
+- `MID` - Mid level (2-5 years)
+- `SENIOR` - Senior level (5-10 years)
+- `LEAD` - Lead/Staff level (10+ years)
+- `EXECUTIVE` - Executive level

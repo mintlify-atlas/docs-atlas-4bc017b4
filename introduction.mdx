@@ -1,0 +1,88 @@
+---
+title: Introduction to WeGotWork
+description: All-in-one hiring platform for creating beautiful career pages, posting jobs, and managing applicants with a built-in ATS.
+---
+
+# Welcome to WeGotWork
+
+WeGotWork is an all-in-one hiring platform built with Next.js that helps you create stunning career pages, post job openings, and manage applicants — all from one easy-to-use platform.
+
+<CardGroup cols={2}>
+  <Card title="Beautiful career pages" icon="building">
+    Create stunning, branded career pages that showcase your company culture and attract top talent.
+  </Card>
+  <Card title="Easy job posting" icon="file-text">
+    Post jobs in minutes with our intuitive editor. Add requirements, benefits, and company info effortlessly.
+  </Card>
+  <Card title="Applicant management" icon="users">
+    Track, review, and manage all applications in one place. Collaborate with your team seamlessly.
+  </Card>
+  <Card title="Analytics & insights" icon="chart-bar">
+    Get detailed analytics on job performance, application rates, and hiring metrics.
+  </Card>
+</CardGroup>
+
+## Key features
+
+### Multi-workspace support
+
+Organize your hiring process with workspace organizations. Each organization gets its own:
+
+- Career page with custom slug (e.g., `yourcompany.wegotwork.co`)
+- Job categories (Software Development, Finance, Operations, HR & Recruiting, Security)
+- Team members with role-based access (owner, member)
+- Applicant tracking system
+
+### Built-in ATS
+
+Manage your hiring pipeline with our applicant tracking system:
+
+- Track applicant status: Submitted, Under Review, Interview, Offer, Rejected, Hired
+- Store resumes and applicant information
+- Review applications with social links (LinkedIn, Twitter, GitHub)
+- Collaborate with team members on candidates
+
+### Secure authentication
+
+Powered by Better Auth with support for:
+
+- Google OAuth
+- Email and password authentication
+- Session management with 7-day expiration
+- Custom session data with organization context
+
+## Tech stack
+
+WeGotWork is built with modern technologies:
+
+- **Framework**: Next.js 15 with React 19
+- **Authentication**: Better Auth 1.1
+- **Database**: PostgreSQL with Prisma ORM
+- **UI**: Tailwind CSS with Radix UI components
+- **Storage**: AWS S3 for resume uploads
+- **Email**: Resend for transactional emails
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your account and post your first job in minutes
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Learn how to integrate Better Auth in your application
+  </Card>
+</CardGroup>
+
+## What you'll build
+
+With WeGotWork, you can:
+
+1. **Create an organization** - Set up your company workspace with a custom slug
+2. **Post jobs** - Create job listings with categories, locations, and job types
+3. **Manage applicants** - Review applications and track candidates through your hiring pipeline
+4. **Invite team members** - Collaborate with your hiring team
+5. **Analyze performance** - Track job posting performance and applicant metrics
+
+<Info>
+  WeGotWork is built with Next.js 15 and uses Better Auth for authentication. Make sure you have Node.js 20+ installed.
+</Info>

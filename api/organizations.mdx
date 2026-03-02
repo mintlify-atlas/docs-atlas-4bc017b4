@@ -1,0 +1,172 @@
+---
+title: Organizations
+description: Manage organizations and their settings in WeGotWork
+---
+
+Organizations are the top-level entity in WeGotWork. Each organization can have multiple jobs, categories, pipelines, and team members.
+
+## Create organization
+
+Create a new organization with default categories and a hiring pipeline.
+
+### Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the organization
+</ParamField>
+
+<ParamField path="slug" type="string" required>
+  A unique URL-friendly identifier for the organization. Must be unique across all organizations.
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success or error message
+</ResponseField>
+
+<ResponseField name="organization" type="object">
+  The created organization object
+  
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Unique identifier for the organization
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Organization name
+    </ResponseField>
+    
+    <ResponseField name="slug" type="string">
+      URL-friendly identifier
+    </ResponseField>
+    
+    <ResponseField name="description" type="string">
+      Organization description (defaults to empty string)
+    </ResponseField>
+    
+    <ResponseField name="website" type="string | null">
+      Organization website URL
+    </ResponseField>
+    
+    <ResponseField name="premium" type="boolean">
+      Whether the organization has premium features (defaults to false)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Default setup
+
+When creating an organization, the following are automatically created:
+
+- **Default categories**: Software Development, Finance, Operations, HR & Recruiting, Security, and more
+- **Default pipeline**: "General Hiring Pipeline" with stages: Screening, Interview, Technical Task, Final Interview, Offer
+- **Organization membership**: The creator is automatically added as an owner
+
+## Update organization
+
+Update an organization's settings.
+
+### Parameters
+
+<ParamField path="organization" type="object" required>
+  The organization object to update
+</ParamField>
+
+<ParamField path="settings" type="object" required>
+  Organization settings to update
+  
+  <Expandable title="properties">
+    <ParamField path="name" type="string" required>
+      Updated organization name
+    </ParamField>
+    
+    <ParamField path="slug" type="string" required>
+      Updated slug (must be unique if changed)
+    </ParamField>
+    
+    <ParamField path="description" type="string">
+      Organization description
+    </ParamField>
+    
+    <ParamField path="website" type="string">
+      Organization website URL
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success or error message. Returns "Slug Already In Use" if the slug is taken.
+</ResponseField>
+
+## Get organization
+
+Retrieve organization details including jobs, categories, and filters.
+
+### Parameters
+
+<ParamField path="slug" type="string" required>
+  The organization's unique slug identifier
+</ParamField>
+
+### Response
+
+<ResponseField name="error" type="boolean">
+  Indicates if an error occurred
+</ResponseField>
+
+<ResponseField name="organization" type="object | null">
+  The organization object with nested data
+  
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Organization ID
+    </ResponseField>
+    
+    <ResponseField name="name" type="string">
+      Organization name
+    </ResponseField>
+    
+    <ResponseField name="slug" type="string">
+      URL-friendly identifier
+    </ResponseField>
+    
+    <ResponseField name="description" type="string">
+      Organization description
+    </ResponseField>
+    
+    <ResponseField name="website" type="string | null">
+      Organization website URL
+    </ResponseField>
+    
+    <ResponseField name="categories" type="array">
+      Job categories with their associated jobs, ordered by category order
+    </ResponseField>
+    
+    <ResponseField name="jobs" type="array">
+      All jobs for this organization, ordered by creation date (newest first)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="locations" type="string[]">
+  Array of unique country locations from jobs
+</ResponseField>
+
+<ResponseField name="types" type="string[]">
+  Array of unique employment types from jobs (fulltime, parttime, internship, contract)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Status message
+</ResponseField>

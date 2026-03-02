@@ -1,0 +1,442 @@
+---
+title: Authentication
+description: Learn how WeGotWork implements Better Auth for secure authentication with Google OAuth and email/password support.
+---
+
+# Authentication
+
+WeGotWork uses [Better Auth](https://better-auth.com) for authentication, providing a secure and flexible authentication system with support for OAuth providers and email/password authentication.
+
+## Overview
+
+Better Auth is configured with:
+
+- **Google OAuth**: Social sign-in with Google accounts
+- **Email & Password**: Traditional authentication method
+- **Custom Sessions**: Extended session data with organization context
+- **PostgreSQL**: Session storage via Prisma adapter
+- **7-day sessions**: Automatic session expiration and renewal
+
+## Authentication setup
+
+### Server-side configuration
+
+The authentication server is configured in `lib/auth.ts`:
+
+```tsx lib/auth.ts
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { customSession } from "better-auth/plugins";
+import prisma from "./prisma";
+
+export const auth = betterAuth({
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://wegotwork.co",
+    "https://www.wegotwork.co",
+    `${process.env.BASE_URL}`,
+  ],
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60, // 1 hour
+    },
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day (session expiration is updated)
+  },
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+  emailAndPassword: {
+    enabled: true,
+  },
+  plugins: [
+    customSession(async ({ user, session }) => {
+      const currentOrganizationId = await prisma.user.findFirst({
+        where: { id: user.id },
+        select: {
+          isPremium: true,
+          currentOrganizationId: true,
+          currentOrganization: true,
+        },
+      });
+      const userOrganizations = await prisma.organizationUser.findMany({
+        where: { userId: user.id },
+        include: { organization: true },
+      });
+      return {
+        user: {
+          ...user,
+          currentOrganizationId: currentOrganizationId?.currentOrganizationId,
+          currentOrganization: currentOrganizationId?.currentOrganization,
+          organizations: userOrganizations,
+          isPremium: currentOrganizationId?.isPremium,
+        },
+        session: session,
+      };
+    }),
+  ],
+});
+```
+
+<Note>
+  The custom session plugin enriches the session with organization data, allowing you to access the user's current organization and all their organizations directly from the session.
+</Note>
+
+### Client-side configuration
+
+The client is configured in `lib/auth-client.ts`:
+
+```tsx lib/auth-client.ts
+import { createAuthClient } from "better-auth/react";
+import { customSessionClient } from "better-auth/client/plugins";
+import { auth } from "./auth";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+  plugins: [customSessionClient<typeof auth>()],
+});
+
+export const { signIn, signUp, useSession, signOut } = authClient;
+export type Session = typeof authClient.$Infer.Session;
+```
+
+### API route handler
+
+Better Auth requires a catch-all API route at `app/api/auth/[...all]/route.ts`:
+
+```tsx app/api/auth/[...all]/route.ts
+import { auth } from "@/lib/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+
+export const { POST, GET } = toNextJsHandler(auth);
+```
+
+## Environment variables
+
+Add these environment variables to your `.env` file:
+
+```bash
+# Database
+DATABASE_URL="postgresql://user:password@host:port/database"
+DIRECT_URL="postgresql://user:password@host:port/database"
+
+# Base URL
+BASE_URL="http://localhost:3000"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+
+# Google OAuth
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
+
+<Warning>
+  Never commit your `.env` file to version control. Keep your OAuth credentials secure.
+</Warning>
+
+## Google OAuth setup
+
+<Steps>
+  <Step title="Create a Google Cloud project">
+    Go to [Google Cloud Console](https://console.cloud.google.com) and create a new project.
+  </Step>
+
+  <Step title="Enable Google+ API">
+    Navigate to "APIs & Services" → "Library" and enable the Google+ API.
+  </Step>
+
+  <Step title="Create OAuth credentials">
+    Go to "APIs & Services" → "Credentials" → "Create Credentials" → "OAuth client ID".
+    
+    - Application type: Web application
+    - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google` (development)
+    - Add production URI: `https://yourapp.com/api/auth/callback/google`
+  </Step>
+
+  <Step title="Copy credentials">
+    Copy the Client ID and Client Secret to your `.env` file.
+  </Step>
+</Steps>
+
+## Database schema
+
+Better Auth requires specific tables in your database. The Prisma schema includes:
+
+```prisma schema.prisma
+model User {
+  id                    String             @id
+  name                  String
+  email                 String             @unique
+  emailVerified         Boolean
+  image                 String?
+  createdAt             DateTime
+  updatedAt             DateTime
+  isPremium             Boolean            @default(false)
+  sessions              Session[]
+  accounts              Account[]
+  userOrganizations     OrganizationUser[]
+  currentOrganizationId String?
+  currentOrganization   Organization?      @relation(fields: [currentOrganizationId], references: [id], onDelete: SetNull)
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+}
+```
+
+## Using authentication in components
+
+### Client components
+
+Use the `useSession` hook in client components:
+
+```tsx
+"use client";
+
+import { useSession } from "@/lib/auth-client";
+
+export default function ProfileComponent() {
+  const { data: session, isPending } = useSession();
+
+  if (isPending) return <div>Loading...</div>;
+  if (!session) return <div>Not authenticated</div>;
+
+  return (
+    <div>
+      <h1>Welcome, {session.user.name}</h1>
+      <p>Current Organization: {session.user.currentOrganization?.name}</p>
+    </div>
+  );
+}
+```
+
+### Server components
+
+Get the session in server components and actions:
+
+```tsx
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+export default async function ServerPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  return (
+    <div>
+      <h1>Welcome, {session.user.name}</h1>
+    </div>
+  );
+}
+```
+
+### Server actions
+
+Protect server actions with session checks:
+
+```tsx
+"use server";
+
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import prisma from "@/lib/prisma";
+
+export async function createJob(title: string) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  const job = await prisma.job.create({
+    data: {
+      title: title,
+      content: "",
+      organizationId: session.user.currentOrganizationId,
+    },
+  });
+
+  return { success: true, job };
+}
+```
+
+## Sign in implementation
+
+The sign-in component demonstrates social authentication:
+
+```tsx components/sign-in.tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { signIn } from "@/lib/auth-client";
+
+export default function SignIn() {
+  return (
+    <div>
+      <Button
+        onClick={async () => {
+          await signIn.social({
+            provider: "google",
+            callbackURL: "/",
+          });
+        }}
+      >
+        Sign in with Google
+      </Button>
+    </div>
+  );
+}
+```
+
+## Sign out implementation
+
+```tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { signOut } from "@/lib/auth-client";
+import { redirect } from "next/navigation";
+
+export function SignOutButton() {
+  return (
+    <Button
+      onClick={async () => {
+        await signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              redirect("/");
+            },
+          },
+        });
+      }}
+    >
+      Sign Out
+    </Button>
+  );
+}
+```
+
+## Session management
+
+### Session expiration
+
+Sessions expire after 7 days of inactivity. The session is automatically refreshed when:
+
+- The user makes an authenticated request
+- More than 1 day has passed since the last update
+
+### Cookie cache
+
+Better Auth uses cookie caching for performance:
+
+- Cache duration: 1 hour
+- Reduces database queries for session validation
+- Automatically refreshes when expired
+
+<Info>
+  The cookie cache improves performance by reducing database queries. Sessions are validated against the cache first, then the database if the cache is expired.
+</Info>
+
+## Custom session data
+
+The custom session plugin adds organization-specific data to every session:
+
+```tsx
+interface CustomSession {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string;
+    currentOrganizationId?: string;
+    currentOrganization?: Organization;
+    organizations: OrganizationUser[];
+    isPremium: boolean;
+  };
+  session: Session;
+}
+```
+
+This allows you to:
+
+- Access the user's current organization without additional queries
+- Display all organizations the user belongs to
+- Check premium status for feature gating
+- Switch between organizations easily
+
+## Security best practices
+
+<Steps>
+  <Step title="Use HTTPS in production">
+    Always use HTTPS for your production application to protect session cookies.
+  </Step>
+
+  <Step title="Configure trusted origins">
+    Only add your actual domains to `trustedOrigins` in the auth configuration.
+  </Step>
+
+  <Step title="Rotate OAuth secrets">
+    Regularly rotate your Google OAuth client secret in production.
+  </Step>
+
+  <Step title="Validate sessions server-side">
+    Always validate sessions in server actions and API routes. Never trust client-side session data alone.
+  </Step>
+
+  <Step title="Implement CSRF protection">
+    Better Auth includes built-in CSRF protection. Ensure your forms use the proper methods.
+  </Step>
+</Steps>
+
+<Tip>
+  Better Auth handles most security concerns automatically, including CSRF protection, secure cookie flags, and token validation. Follow the framework's conventions for the best security posture.
+</Tip>
