@@ -39,7 +39,8 @@
               "features/job-management",
               "features/applicant-tracking",
               "features/pipelines",
-              "features/team-collaboration"
+              "features/team-collaboration",
+              "features/pricing-and-billing"
             ]
           },
           {
